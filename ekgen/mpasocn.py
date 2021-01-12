@@ -1,4 +1,4 @@
-import os, subprocess
+import os, subprocess, json, shutil
 from microapp import App, appdict
 from ekgen.utils import xmlquery
 
@@ -8,8 +8,8 @@ class MPASOcnKernel(App):
 
     def __init__(self, mgr):
 
-        self.add_argument("casedir", metavar="dir", help="E3SM case directory")
-        self.add_argument("callsitefile", metavar="file", help="KGen callsite Fortran source file")
+        self.add_argument("casedir", metavar="casedir", help="E3SM case directory")
+        self.add_argument("callsitefile", metavar="callsitefile", help="KGen callsite Fortran source file")
         self.add_argument("-o", "--outdir", type=str, help="output directory")
 
         self.register_forward("data", help="json object")
@@ -48,7 +48,11 @@ class MPASOcnKernel(App):
         mpidir = os.environ["MPI_ROOT"]
         excludefile = "/ccs/home/grnydawn/bin/exclude_e3sm_mpas.ini"
 
-        cmd = " -- buildscan '%s' --savejson '%s' --reuse '%s' --verbose --backup '%s'" % (
+        if not os.path.isfile(compjson):
+            blddir = xmlquery(casedir, "OBJROOT", "--value")
+            shutil.rmtree(blddir)
+
+        cmd = " -- buildscan '%s' --savejson '%s' --reuse '%s' --backupdir '%s'" % (
                 buildcmd, compjson, compjson, srcbackup)
         ret, fwds = self.manager.run_command(cmd)
 
@@ -56,6 +60,43 @@ class MPASOcnKernel(App):
         # handle mpas converted file for callsitefile2
         # TODO: replace kgen contaminated file with original files
         # TODO: recover removed e3sm converted files in cmake-bld, ... folders
+
+        with open(compjson) as f:
+            jcomp = json.load(f)
+
+            for srcpath, compdata in jcomp.items():
+                srcbackup = compdata["srcbackup"]
+
+                if not srcbackup:
+                    continue
+
+                if not os.path.isfile(srcpath) and srcbackup[0] and os.path.isfile(srcbackup[0]):
+                    orgdir = os.path.dirname(srcpath)
+
+                    if not os.path.isdir(orgdir):
+                        os.makedirs(orgdir)
+
+                    shutil.copy(srcbackup[0], srcpath)
+
+                for incsrc, incbackup in srcbackup[1:]:
+                    if not os.path.isfile(incsrc) and incbackup and os.path.isfile(incbackup):
+                        orgdir = os.path.dirname(incsrc)
+
+                        if not os.path.isdir(orgdir):
+                            os.makedirs(orgdir)
+
+                        shutil.copy(incbackup, incsrc)
+                
+        # TODO: actually scan source files if they should be recovered
+
+        statedir = os.path.join(outdir, "state")
+        etimedir = os.path.join(outdir, "etime")
+
+        if os.path.isdir(statedir) and os.path.isfile(os.path.join(statedir, "Makefile")):
+            stdout = subprocess.check_output("make recover", cwd=statedir, shell=True)
+
+        elif os.path.isdir(etimedir) and os.path.isfile(os.path.join(etimedir, "Makefile")):
+            stdout = subprocess.check_output("make recover", cwd=etimedir, shell=True)
 
         #cmd = " -- resolve --compile-info '@data' '%s'" % callsitefile
         rescmd = (" -- resolve --mpi header='%s/include/mpif.h' --openmp enable"
@@ -65,8 +106,10 @@ class MPASOcnKernel(App):
         #assert ret == 0
 
         # TODO wait??
-        cmd = rescmd + " -- runscan '@analysis' -s 'timing' --outdir '%s' --cleancmd '%s' --buildcmd '%s' --runcmd '%s' --output '%s'" % (
-                    outdir, cleancmd, buildcmd, runcmd, outfile)
+        #cmd = rescmd + " -- runscan '@analysis' -s 'timing' --outdir '%s' --cleancmd '%s' --buildcmd '%s' --runcmd '%s' --output '%s'" % (
+                    #outdir, cleancmd, buildcmd, runcmd, outfile)
+        cmd = rescmd + " -- runscan '@analysis' -s 'timing' --outdir '%s' --buildcmd '%s' --runcmd '%s' --output '%s'" % (
+                    outdir, buildcmd, runcmd, outfile)
         #ret, fwds = prj.run_command(cmd)
         # add model config to analysis
 

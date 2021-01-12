@@ -48,7 +48,7 @@ def test_summit(capsys):
     assert ret == 0
 
     #assert os.path.isfile(modeljson) is True
-    assert os.path.isfile(os.path.join(outdir, "kernel", "ocn_gm_velocity.0.0.1"))
+    assert os.path.isfile(os.path.join(outdir, "kernel", "gm_bolus_velocity.0.0.1"))
 
     ret, fwds = prj.run_command("shell 'make' --workdir '%s'" % os.path.join(outdir, "kernel"))
 
