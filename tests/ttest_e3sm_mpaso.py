@@ -61,6 +61,6 @@ def test_summit(capsys):
 
     assert ret == 0
     assert not fwds["stderr"]
-    assert b"calc: PASSED verification" in fwds["stdout"]
+    assert b"PASSED verification" in fwds["stdout"]
 
     shutil.rmtree(outdir)

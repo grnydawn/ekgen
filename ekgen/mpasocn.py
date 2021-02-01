@@ -115,5 +115,3 @@ class MPASOcnKernel(App):
 
         cmd = cmd + " -- kernelgen '@analysis' --model '@model' --repr-etime 'ndata=40,nbins=10'  --outdir '%s'" % outdir
         ret, fwds = self.manager.run_command(cmd)
-
-        import pdb; pdb.set_trace()

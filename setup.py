@@ -6,7 +6,7 @@ def main():
     from ekgen.main import E3SMKGen as kgen
 
     console_scripts = ["ekgen=ekgen.__main__:main"]
-    install_requires = ["fortlab>=0.1.6"]
+    install_requires = ["fortlab>=0.1.7"]
 
     setup(
         name=kgen._name_,
