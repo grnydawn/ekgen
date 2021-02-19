@@ -1,6 +1,7 @@
 from fortlab import Fortlab
 
 from ekgen.mpasocn import MPASOcnKernel
+from ekgen.atm import AtmKernel
 
 class E3SMKGen(Fortlab):
 
@@ -11,7 +12,7 @@ class E3SMKGen(Fortlab):
     _author_ = "Youngsung Kim"
     _author_email_ = "youngsung.kim.act2@gmail.com"
     _url_ = "https://github.com/grnydawn/ekgen"
-    _builtin_apps_ = [MPASOcnKernel]
+    _builtin_apps_ = [MPASOcnKernel, AtmKernel]
 
     def __init__(self):
         pass

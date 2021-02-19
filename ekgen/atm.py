@@ -4,8 +4,8 @@ from ekgen.utils import xmlquery
 
 here = os.path.dirname(os.path.abspath(__file__))
 
-class MPASOcnKernel(App):
-    _name_ = "mpasocn"
+class AtmKernel(App):
+    _name_ = "atm"
     _version_ = "0.1.0"
 
     def __init__(self, mgr):
@@ -42,13 +42,13 @@ class MPASOcnKernel(App):
 
         # get mpi and git info here(branch, commit, ...)
         srcroot = os.path.abspath(os.path.realpath(xmlquery(casedir, "SRCROOT", "--value")))
-        reldir = os.path.relpath(csdir, start=os.path.join(srcroot, "components", "mpas-source", "src"))
+        #reldir = os.path.relpath(csdir, start=os.path.join(srcroot, "components", "mpas-source", "src"))
 
-        callsitefile2 = os.path.join(casedir, "bld", "cmake-bld", reldir, "%s.f90" % csname)
+        #callsitefile2 = os.path.join(casedir, "bld", "cmake-bld", reldir, "%s.f90" % csname)
 
         # get mpi: mpilib from xmlread , env ldlibrary path with the mpilib
         mpidir = os.environ["MPI_ROOT"]
-        excludefile = os.path.join(here, "exclude_e3sm_mpas.ini")
+        excludefile = os.path.join(here, "exclude_e3sm_atm.ini")
 
         blddir = xmlquery(casedir, "OBJROOT", "--value")
         if not os.path.isfile(compjson) and os.path.isdir(blddir):
@@ -103,7 +103,7 @@ class MPASOcnKernel(App):
         #cmd = " -- resolve --compile-info '@data' '%s'" % callsitefile
         rescmd = (" -- resolve --mpi header='%s/include/mpif.h' --openmp enable"
                  " --compile-info '%s' --keep '%s' --exclude-ini '%s' '%s'" % (
-                mpidir, compjson, analysisjson, excludefile, callsitefile2))
+                mpidir, compjson, analysisjson, excludefile, callsitefile))
         #ret, fwds = prj.run_command(cmd)
         #assert ret == 0
 
