@@ -54,11 +54,11 @@ Make directory for the kernel generation. Or you can specify the output director
         >>> cd ocn_gm_kernel
         >>> ekgen mpasocn ${HOME}/scratch/mycase ${HOME}/scratch/E3SM/components/mpas-source/src/core_ocean/shared/mpas_ocn_gm.F
 
-ekgen-mpasocn run initiates one E3SM build and two E3SM runs with additional analysis overheads. Therefore, it is advised to wait up to 2 ~ 3 times of your regular E3SM build/run time including time to wait on job queue.
+ekgen-mpasocn run initiates one E3SM build and two E3SM runs with additional analysis overheads. Therefore, it is advised to wait up to 2 ~ 3 times of your regular E3SM build/run time including time to wait on the job queue.
 
 3. check extracted kernel source files and data files
 ---------------------------------------------------------------
-Once completed kernel extraction successfully, “kernel” directory will be created in output directory with source files, data files, and a Makefile. You may try to build/run the kernel as following:
+Once completed kernel extraction successfully, “kernel” directory will be created in the output directory with source files, data files, and a Makefile. You may try to build/run the kernel as following:
 
  
 
