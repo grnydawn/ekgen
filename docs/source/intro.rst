@@ -3,7 +3,6 @@ Getting-started
 ===============
 
 
-
 -------------
 Installation
 -------------
@@ -33,21 +32,27 @@ Requirements
 - C Preprocessor(cpp)
 - System Call Tracer(strace)
 
-----------------------------------
-First Kernel-generation using KGen
-----------------------------------
+-------------------------
+E3SM Kernel Extraction
+-------------------------
 
-KGen distribution comes with several examples. Following shows how to run one of examples.
+Once ekgen is installed correctly and a E3SM case is created successfully, you can extract a kernel as exaplained below.
 
-Current version runs only on Linux.
+The syntax of ekgen command is following:
+
+        >>> ekgen <mpasocn|eam> $CASEDIR $CALLSITEFILE
+
+, where $CASEDIR is a directory path to E3SM case directory and $CALLSITEDIR is a file path to a E3SM source file containing ekgen kernel region directives.
+As of this version, there exist two subcommands of mpasocn and eam for MPAS Ocean Model and E3SM Atmospheric Model each. Please see _command for details about the sub-commands.
+
+ekgen kernel region directives a pair of comment-line directives that defines a region of kernel extraction. Following example 
 
 ::
 
-    >>> cd $KGEN/examples/simple    # Move to an example
-    >>> vi src/Makefile             # Modify FC if required
-    >>> make                        # Generate a kernel
-    >>> cd kernel                   # Move to a kernel directory
-    >>> make                        # Run a kernel
+        !$kgen begin_callsite vecadd
+        DO i=1
+                C(i) = A(i) + B(i)
+        END DO
+        !$kgen  end_callsite
 
-First make command acutally runs a KGen command with several options and an argument. Please see an :doc:`example <examples/simple>` section for details.
-
+Please see _directives for details about using ekgen directives.

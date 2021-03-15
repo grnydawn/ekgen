@@ -4,13 +4,8 @@
 Examples
 *****************
 
-.. only:: html
-
-    :Release: |version|
-    :Date: |today|
+T.B.D.
 
 .. toctree::
     :maxdepth: 2
 
-    simple-region
-    simple-MPI
