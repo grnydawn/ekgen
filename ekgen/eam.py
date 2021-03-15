@@ -4,14 +4,14 @@ from ekgen.utils import xmlquery
 
 here = os.path.dirname(os.path.abspath(__file__))
 
-class AtmKernel(App):
-    _name_ = "atm"
+class EAMKernel(App):
+    _name_ = "eam"
     _version_ = "0.1.0"
 
     def __init__(self, mgr):
 
         self.add_argument("casedir", metavar="casedir", help="E3SM case directory")
-        self.add_argument("callsitefile", metavar="callsitefile", help="KGen callsite Fortran source file")
+        self.add_argument("callsitefile", metavar="callsitefile", help="ekgen callsite Fortran source file")
         self.add_argument("-o", "--outdir", type=str, help="output directory")
 
         self.register_forward("data", help="json object")
@@ -48,7 +48,7 @@ class AtmKernel(App):
 
         # get mpi: mpilib from xmlread , env ldlibrary path with the mpilib
         mpidir = os.environ["MPI_ROOT"]
-        excludefile = os.path.join(here, "exclude_e3sm_atm.ini")
+        excludefile = os.path.join(here, "exclude_e3sm_eam.ini")
 
         blddir = xmlquery(casedir, "OBJROOT", "--value")
         if not os.path.isfile(compjson) and os.path.isdir(blddir):
