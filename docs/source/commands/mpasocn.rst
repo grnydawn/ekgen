@@ -3,154 +3,99 @@
 mpasocn: MPAS Ocean
 =====================
 
-This example is to explain how to generate a kernel from a block of source codes in a MPI program.
-This example can be found at $KGEN_HOME/examples/simple-MPI of KGen distribution.
+Example: kernel extraction from E3SM MPAS Ocean
 
------------
-Preparation
------------
+0. Create a E3SM case
+-------------------------
 
-If you have not installed KGen, please see :doc:`Getting-started <../getting-started>`.
+First, create your E3SM case and note the path of this case directory for later use in ekgen run.
 
-Following Linux utilities are required to use KGen.
+1. Mark the kernel region with ekgen directives in source file
+----------------------------------------------------------------------------
+Choose a file among MPAS Ocean source files. In this example, we marked ekgen directives in “components/mpas-source/src/core_ocean/shared/mpas_ocn_gm.F”
 
-::
 
-    - make      : Software builder
-    - cpp       : C preprocessor
-    - strace    : System call tracer
+#### mpas_ocn_diagnostics.F#####
 
+.. code-block:: fortran
+
+        module ocn_gm
+        ...
+        subroutine ocn_gm_compute_Bolus_velocity(diagnosticsPool, meshPool, scratchPool)
+        ...   
+              allocate(rightHandSide(nVertLevels))
+              allocate(tridiagA(nVertLevels))
+              allocate(tridiagB(nVertLevels))
+              allocate(tridiagC(nVertLevels))
+
+        !$kgen begin_callsite gm_bolus_velocity
+
+              nCells = nCellsArray( size(nCellsArray) )
+              nEdges = nEdgesArray( size(nEdgesArray) )
+        ...
+              !$omp do schedule(runtime)
+              do iCell = 1, nCells
+                 gmStreamFuncTopOfCell(:, iCell) = gmStreamFuncTopOfCell(:,iCell) / areaCell(iCell)
+              end do
+              !$omp end do
+
+        !$kgen end_callsite gm_bolus_velocity
+        ...
+        end subroutine ocn_gm_compute_Bolus_velocity
+        ...
+        end module ocn_gm
+
+2. run ekgen
 --------------------
-Files in the example
---------------------
+Make directory for the kernel generation. Or you can specify the output directory using “-o” ekgen option. Run ekgen-mpasocn with case directory path and ekgen-directed source file path.
 
-Following tree explains the files in this example.
 
-::
+        >>> mkdir ocn_gm_kernel
+        >>> cd ocn_gm_kernel
+        >>> ekgen mpasocn ${HOME}/scratch/mycase ${HOME}/scratch/E3SM/components/mpas-source/src/core_ocean/shared/mpas_ocn_gm.F
 
-    $KGEN_HOME/examples/simple-region 
-    |
-    |-- Makefile            : contains KGen command to generate a KGen kernel
-    |-- README              : an introduction of the example
-    `-- src                 : contains target software that a kernel will be generated from
-        |-- calc_mod.F90    : contains "calc" subroutine that is a target of kernel
-        |-- job.lsf         : contains batch command to run the software using IBM Platform LSF
-        |-- Makefile.lsf    : contains commands to build/run the software using IBM Platform LSF
-        |-- Makefile.mpirun : contains commands to build/run the software on a local machine using mpirun
-        |-- program.F90     : an entry of program
-        `-- update_mod.F90  : contains a call-site to the kernel subroutine in calc_mod.F90
+ekgen-mpasocn run initiates one E3SM build and two E3SM runs with additional analysis overheads. Therefore, it is advised to wait up to 2 ~ 3 times of your regular E3SM build/run time including time to wait on job queue.
 
----------------------------------
-KGen command to generate a kernel
----------------------------------
+3. check extracted kernel source files and data files
+---------------------------------------------------------------
+Once completed kernel extraction successfully, “kernel” directory will be created in output directory with source files, data files, and a Makefile. You may try to build/run the kernel as following:
 
-When user runs "make" command in top directory of the example, following KGen command is executed.
+ 
+
+
+> cd kernel
+> make build
+> make run
+ 
+
+The extracted kernel has a built-in timing measurement and correctness check that ensure the kernel generates the same data that the original application generates. Following is a partial capture of screen output when the gm_bolus_velocity kernel runs.
 
 ::
 
-    $KGEN_HOME/bin/kgen \
-        --cmd-clean "cd src; make -f Makefile.mpirun clean" \
-        --cmd-build "cd src; make -f Makefile.mpirun build" \
-        --cmd-run "cd src; make -f Makefile.mpirun run" \
-        src/update_mod.F90:update_mod:update:calc
+        ***************** Verification against 'gm_bolus_velocity.16.0.2' *****************
 
-**NOTE**: Several KGen options shown in the example of KGen distribution are omitted. The options are explained below.
+        Number of output variables:            43
+        Number of identical variables:            43
+        Number of non-identical variables within tolerance:             0
+        Number of non-identical variables out of tolerance:             0
+        Tolerance:    1.0000000000000000E-014
 
+        Verification PASSED with gm_bolus_velocity.16.0.2
 
-First three options in the command let KGen know how to **"clean/build/run"** the target software. The commands in this options can be any Linux command including ones from other complex building system such as CMake or GNU Automake. **"clean"** command is to make sure that all the source files required for KGen analysis will be actually compiled. **"build"** command is to build the software so that KGen collect CPP macros and file paths automatically. **"run"** command is to run the software that is built with KGen-instrumented source files so that KGen can automatically generate state input/output data that are used for kernel execution and verification. Please see :doc:`User guide <../user-guide>` for more details.
+        gm_bolus_velocity : Time per call (usec):     47257.00000000000
 
-The last line of the KGen command is a path to a source file and KGen "namepath". KGen namepath is generally composed of module name, subprogram name and call target name. For example, in this example namepath to a callsite is "update_mod:update:calc". Please see :doc:`User guide <../user-guide>` for more details.
-
-::
-
-    MODULE update_mod
-        USE calc_mod, only : calc
-        PUBLIC update
-    CONTAINS
-        SUBROUTINE update()
-            INTEGER :: i, j
-            real, dimension(ROW, COL) :: out2, out3, output
-            DO i=1, COL
-                DO j=1, ROW
-                    CALL calc(i, j, output, out2, out3)     ! calling a subroutine of interest
-                END DO
-            END DO
-            print *, 'SUM(output) = ', SUM(output)
-        END SUBROUTINE
-    END MODULE
-
-
-Other options in the example of KGen distribution are explained below.
-
-::
-
-    --timing repeat=100                  : repeats kernel execution 100 times to increase timing measurment resolution
-    --invocation 0:0:1,0:0:3,1:0:1,1:0:3 : generates state data from first and third invocations of MPI rank 0 and 1
-    --check tolerance=1.0D-14            : generates failed verification if kernel output is different more than 1.0D-14
-    --rebuild all                        : prevents using cached information from previous kernel generation
-
-
-----------------
-Running a kernel
-----------------
-
-Once a kernel is generated successfully, a kernel can be executed immediately as following.
-
-::
-
-     >>> cd kernel
-     >>> make
-
-        ifort  -c -o kgen_utils.o kgen_utils.f90
-        ifort  -c -o tprof_mod.o tprof_mod.f90
-        ifort  -c -o calc_mod.o calc_mod.F90
-        ifort  -c -o update_mod.o update_mod.F90
-        ifort  -c -o kernel_driver.o kernel_driver.f90
-        ifort    -o kernel.exe update_mod.o calc_mod.o kernel_driver.o kgen_utils.o tprof_mod.o
-
-        ./kernel.exe
-
-        ***************** Verification against 'calc.0.0.1' *****************
-         
-        Number of output variables:            1
-        Number of identical variables:            1
-        Number of non-identical variables within tolerance:            0
-        Number of non-identical variables out of tolerance:            0
-        Tolerance:   1.000000000000000E-014
-
-        Verification PASSED
-
-        calc : Time per call (usec):   1.999999955296516E-002
-
-        ***************** Verification against 'calc.0.0.3' *****************
-
-        ...
-         
-        ***************** Verification against 'calc.1.0.1' *****************
-         
-        ...
-         
-        ***************** Verification against 'calc.1.0.3' *****************
-         
-        ...
-         
         ****************************************************
-            kernel execution summary: calc
+        kernel execution summary: gm_bolus_velocity
         ****************************************************
-            Total number of verification cases  :     4
-            Number of verification-passed cases :     4
-         
-            Average call time (usec):  0.125E-01
-            Minimum call time (usec):  0.100E-01
-            Maximum call time (usec):  0.200E-01
+        Total number of verification cases  :    42
+        Number of verification-passed cases :    42
+
+        kernel gm_bolus_velocity: PASSED verification
+
+        number of processes  1
+
+        Average call time (usec):  0.411E+05
+        Minimum call time (usec):  0.267E+05
+        Maximum call time (usec):  0.499E+05
+
         ****************************************************
-
-
-KGen generates kernel source files and utility files in "kernel" subdirectory. "Makefile" in the directory helps user to build/run the kernel conviniently.
-All KGen-generated kernels verify its output against state data generated from original software execution and provide verification results with detail information.
-
------------
-What's next
------------
-
-:doc:`User guide <../user-guide>`
