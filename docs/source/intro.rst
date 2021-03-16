@@ -2,12 +2,13 @@
 Getting-started
 ===============
 
+To use ekgen, ekgen should be installed on the system where E3SM case directory and E3SM source files exist.
 
 -------------
 Installation
 -------------
 
-The easiest way to install ekgen is to use pip python package manager. 
+The easiest way to install ekgen is to use the pip python package manager. 
 
         >>> pip install ekgen
 
@@ -17,7 +18,7 @@ You can install ekgen from github code repository if you want to try the latest 
         >>> cd ekgen
         >>> python setup.py install
 
-Once installed, you can test the installation by running following command.
+Once installed, you can test the installation by running the following command.
 
         >>> ekgen --version
         ekgen 0.1.0
@@ -36,7 +37,7 @@ Requirements
 E3SM Kernel Extraction
 -------------------------
 
-Once ekgen is installed correctly and a E3SM case is created successfully, you can extract a kernel as exaplained below.
+Once ekgen is installed correctly and a E3SM case is created successfully, you can extract a kernel as explained below.
 
 The syntax of ekgen command is following:
 

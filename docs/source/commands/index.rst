@@ -2,7 +2,7 @@
 
 
 *********************
-Sub-commands
+Extracting a kernel
 *********************
 
 The syntax of ekgen command is following:
