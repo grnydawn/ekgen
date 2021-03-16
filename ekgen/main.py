@@ -6,7 +6,7 @@ from ekgen.atm import AtmKernel
 class E3SMKGen(Fortlab):
 
     _name_ = "ekgen"
-    _version_ = "0.1.0"
+    _version_ = "0.2.1"
     _description_ = "Microapp E3SM Fortran Kernel Generator"
     _long_description_ = "Microapp E3SM Fortran Kernel Generator"
     _author_ = "Youngsung Kim"

@@ -28,12 +28,23 @@ class MPASOcnKernel(App):
         buildcmd = "cd %s; ./case.build" % casedir
         runcmd = "cd %s; ./case.submit" % casedir
 
+        # TODO: move this batch support to common area
+
         batch = xmlquery(casedir, "BATCH_SYSTEM", "--value")
         if batch == "lsf":
             runcmd += " --batch-args='-K'"
-        else:
-            raise Exception("Unknown batch system")
 
+        elif "slurm" in batch:
+            runcmd += " --batch-args='-W'"
+
+        elif batch == "pbs":
+            runcmd += " --batch-args='-sync yes'"
+
+        elif batch == "moab":
+            runcmd += " --batch-args='-K'"
+
+        else:
+            raise Exception("Unknown batch system: %s" % batch)
  
         compjson = os.path.join(outdir, "compile.json")
         analysisjson = os.path.join(outdir, "analysis.json")
