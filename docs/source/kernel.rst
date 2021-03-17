@@ -50,4 +50,6 @@ There are following limitations on placing ekgen directives in source file.
 Special notes for mpasocn
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    * ekgen does not support MPAS Ocean pooling mechanism. Therefore, the kernel region for extraction should not include any pooling-related code. For example, if a kernel region can not include the pooling-related subroutine calls such as "mpas_pool_get_config".
+    * The kernel region should not include a variable of MPAS Ocean derived data types of file_desc_t io_desc_t var_desc_t iosystem_desc_t file_desc_t io_desc_t var_desc_t iosystem_desc_t.
     * When an allocatable array or pointer variable is allocated within the kernel region, there could be an error message during kernel compilation of using the variable before being allocated. The error could be resolved by removing the line where the compilation error occured.
