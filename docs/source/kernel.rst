@@ -46,3 +46,8 @@ There are following limitations on placing ekgen directives in source file.
         END DO
         !$kgen  end_callsite #### NOT VALID : across DO block boundary 
 
+
+Special notes for mpasocn
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    * When an allocatable array or pointer variable is allocated within the kernel region, there could be an error message during kernel compilation of using the variable before being allocated. The error could be resolved by removing the line where the compilation error occured.

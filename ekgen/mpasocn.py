@@ -37,8 +37,9 @@ class MPASOcnKernel(App):
         elif "slurm" in batch:
             runcmd += " --batch-args='-W'"
 
-        elif batch == "pbs":
+        elif batch == "pbs": # SGE PBS
             runcmd += " --batch-args='-sync yes'"
+            #runcmd += " --batch-args='-Wblock=true'" # PBS
 
         elif batch == "moab":
             runcmd += " --batch-args='-K'"
